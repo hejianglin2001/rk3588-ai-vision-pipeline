@@ -11,39 +11,39 @@
 
 ```
 ┌────────────────── RK3588 ──────────────────────┐       ┌─ 笔记本 ───────────┐
-│                                                 │       │                    │
+│                                                │       │                    │
 │  MIPI 摄像头 (IMX415)                           │       │  MQTT Broker        │
-│    │ UYVY 1920×1080                             │       │    │               │
-│    ▼                                            │       │    ├─ perceiption  │
-│  V4L2 采集 (Multiplanar)                        │       │    └─ perf log     │
+│    │ UYVY 1920×1080                            │        │    │               │
+│    ▼                                           │        │    ├─ perceiption  │
+│  V4L2 采集 (Multiplanar)                       │        │    └─ perf log     │
 │    │                                            │       │                    │
 │    ▼                                            │       │  VLC / ffplay      │
 │  RGA 硬件预处理                                  │       │    │               │
 │  UYVY→RGB + 1080→640 (imresize, ~1ms)           │       │    rtsp://         │
 │    │                                            │       │                    │
 │    ▼                                            │       └────────────────────┘
-│  NPU 推理 (YOLO26n, INT8, 25ms)                        ▲         ▲
-│    │ 0 号输出: bbox [4×8400]                     │       │         │
-│    ├ 1 号输出: score [80×8400]                  │       │        MQTT
-│    ▼                                            │       │
-│  NMS 后处理 → 检测框                             │       │
-│    │                                            │       │
-│    ├── 安全状态机 (硬实时, 不依赖网络)              │       │
-│    ├── MQTT 上报 (JSON) ─────────────────────────┘       │
-│    └── 可视化 → NV12 → FIFO                       │       │
-│                            │                      │       │
-│                            ▼                      │       │
-│                      GStreamer pipeline:           │       │
-│                      videoparse → mpph264enc      │       │
-│                      → h264parse → tcpserversink   │       │
-│                            │                      │       │
-│                            ▼                      │       │
-│                      ffmpeg: H264 TCP → RTSP       │       │
-│                            │                      │       │
-│                            ▼                      │       │
-│                      mediamtx: RTSP Server (:8554) │       │
-│                            │                      │       │
-│                      rtsp://板子IP:8554/live ──────┘       │
+│  NPU 推理 (YOLO26n, INT8, 25ms)                  |          ▲         ▲
+│    │ 0 号输出: bbox [4×8400]                     │          │         │
+│    ├ 1 号输出: score [80×8400]                   │          │       MQTT
+│    ▼                                             │          │
+│  NMS 后处理 → 检测框                              │          │
+│    │                                             │          │
+│    ├── 安全状态机 (硬实时, 不依赖网络)               │        │
+│    ├── MQTT 上报 (JSON) ─────────────────────————────┘        │
+│    └── 可视化 → NV12 → FIFO                        │        │
+│                            │                       │        │
+│                            ▼                       │        │
+│                      GStreamer pipeline:           │        │
+│                      videoparse → mpph264enc       │        │
+│                      → h264parse → tcpserversink   │        │
+│                            │                       │        │
+│                            ▼                       │        │
+│                      ffmpeg: H264 TCP → RTSP       │        │
+│                            │                       │        │
+│                            ▼                       │        │
+│                      mediamtx: RTSP Server (:8554) │        │
+│                            │                       │        │
+│                      rtsp://板子IP:8554/live ──────┘        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -73,7 +73,7 @@
 
 > 最优配置 **#5: RGA+ST+RTSP**, 采集仅 3.6ms, FPS 26.1 稳定可预测。多线程(#7, #8)受 DDR 控制器仲裁影响, 各阶段波动剧烈。
 
-### 核心发现: DDR 带宽是零和游戏
+### 发现: DDR 带宽是零和游戏
 
 ```
 capture 和 NMS 严格互斥 —— 不可能同时快:
