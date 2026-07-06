@@ -15,7 +15,7 @@
 │  MIPI 摄像头 (IMX415)                           │       │  MQTT Broker        │
 │    │ UYVY 1920×1080                             │       │    │               │
 │    ▼                                            │       │    ├─ perceiption  │
-│  V4L2 采集 (手写 Multiplanar)                    │       │    └─ perf log     │
+│  V4L2 采集 (Multiplanar)                        │       │    └─ perf log     │
 │    │                                            │       │                    │
 │    ▼                                            │       │  VLC / ffplay      │
 │  RGA 硬件预处理                                  │       │    │               │
