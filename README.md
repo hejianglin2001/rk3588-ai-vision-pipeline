@@ -212,16 +212,13 @@ convert_cpp/
 - **MPP + RTSP**: 4 进程链路 (C++→FIFO→GStreamer→ffmpeg→mediamtx), MPP 硬编码零 CPU 开销
 - **DDR 争抢分析**: 9 配置全链路对比, 定位 RK3588 DDR 总线为系统瓶颈
 
-## 截图
 
-> *截取以下图片放到 `docs/images/` 目录下:*
-> - `rtsp-vlc.png` — VLC 播放 rtsp:// 的窗口截图, 包含检测框和指标叠加
-> - `terminal-perf.png` — 板端终端显示 FPS 性能输出
-> - `board-setup.jpg` — RK3588 + 摄像头 + HDMI 接线照片
+
+
 
 ![RTSP推流](docs/images/rtsp-vlc.png)
 ![性能终端](docs/images/terminal-perf.png)
-![硬件搭建](docs/images/board-setup.jpg)
+
 
 ## License
 
