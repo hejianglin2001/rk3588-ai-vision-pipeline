@@ -19,8 +19,11 @@ inline void draw_boxes(cv::Mat& bgr, const std::vector<Box>& boxes) {
         char label[64];
         snprintf(label, sizeof(label), "%s %.2f",
                  b.cls < 80 ? COCO_NAMES[b.cls] : "?", b.conf);
+        // 黑色描边提高可读性
         cv::putText(bgr, label, cv::Point(b.x1, b.y1 - 5),
-                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
+                    cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 0, 0), 3);
+        cv::putText(bgr, label, cv::Point(b.x1, b.y1 - 5),
+                    cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 0), 2);
     }
 }
 

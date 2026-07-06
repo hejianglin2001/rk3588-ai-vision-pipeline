@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
             rknn_output outputs[2] = {};
             outputs[0].want_float = 1; outputs[1].want_float = 1;
             rknn_outputs_get(context, 2, outputs, NULL);
-            ir.boxes = postprocess_split((float*)outputs[0].buf, (float*)outputs[1].buf);
+            ir.boxes = postprocess_split((float*)outputs[0].buf, (float*)outputs[1].buf, 0.25f);
             rknn_outputs_release(context, 2, outputs);
             ir.img = move(pf.img); ir.id = pf.id;
             ir.capture_tp = pf.capture_tp;
@@ -274,7 +274,7 @@ int main(int argc, char *argv[])
         rknn_output outputs[2] = {};
         outputs[0].want_float = 1; outputs[1].want_float = 1;
         rknn_outputs_get(context, 2, outputs, NULL);
-        auto boxes = postprocess_split((float*)outputs[0].buf, (float*)outputs[1].buf);
+        auto boxes = postprocess_split((float*)outputs[0].buf, (float*)outputs[1].buf, 0.25f);
         rknn_outputs_release(context, 2, outputs);
         auto t_post = chrono::steady_clock::now();
         double npu_ms = ns(t_npu - cap_tp).count() / 1e6;

@@ -5,8 +5,8 @@
 
 // ── 摄像头 ──
 #define CAM_DEVICE      "/dev/video11"
-#define CAM_WIDTH       640
-#define CAM_HEIGHT      640
+#define CAM_WIDTH       1920
+#define CAM_HEIGHT      1080
 
 // ── 模型输入 ──
 #define MODEL_W          640
