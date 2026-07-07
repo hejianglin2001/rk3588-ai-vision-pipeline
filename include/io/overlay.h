@@ -7,6 +7,8 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <cstdio>
+#include <fcntl.h>
+#include <unistd.h>
 #include <vector>
 #include "core/postprocess.h"
 #include "io/coco_names.h"
@@ -45,19 +47,21 @@ inline void draw_perf_overlay(cv::Mat& bgr, double fps, double e2e_ms,
                 cv::FONT_HERSHEY_SIMPLEX, 0.45, cv::Scalar(255, 255, 255), 1);
 }
 
-// ── BGR → NV12 → 写 FIFO 管道 ──
-// 返回 true=写入成功, false=管道未打开
+// ── BGR → NV12 → 写 FIFO 管道 (非阻塞) ──
 inline bool write_nv12_pipe(const cv::Mat& bgr, FILE* pipe) {
     if (!pipe) return false;
     cv::Mat i420;
     cv::cvtColor(bgr, i420, cv::COLOR_BGR2YUV_I420);
-    int sz = bgr.cols * bgr.rows;  // 640*640
-    // Y 平面 (全分辨率)
-    fwrite(i420.data, 1, sz, pipe);
-    // UV 交错 (I420 → NV12: U和V逐对交叉)
-    for (int i = 0; i < sz / 4; i++) {
-        uint8_t uv[2] = { i420.data[sz + i], i420.data[sz + sz / 4 + i] };
-        fwrite(uv, 1, 2, pipe);
+    int sz = bgr.cols * bgr.rows;
+    static std::vector<uint8_t> nv12(sz + sz/2);
+    memcpy(nv12.data(), i420.data, sz);
+    int uv_sz = sz / 4;
+    uint8_t* dst_uv = nv12.data() + sz;
+    for (int i = 0; i < uv_sz; ++i) {
+        dst_uv[i*2]   = i420.data[sz + i];
+        dst_uv[i*2+1] = i420.data[sz + uv_sz + i];
     }
+    // 阻塞写: 管道满时等GStreamer消费, 保证帧完整
+    fwrite(nv12.data(), 1, sz + uv_sz*2, pipe);
     return true;
 }

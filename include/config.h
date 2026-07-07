@@ -15,11 +15,11 @@
 #define MODEL_BYTES      (MODEL_W * MODEL_H * MODEL_C)  // 1,228,800
 
 // ── 网络 ──
-#define MQTT_BROKER_IP  "192.168.0.104"
+#define MQTT_BROKER_IP  "192.168.31.164"
 #define MQTT_PORT        1883
 #define MQTT_TOPIC_CMD   "robot/command"
 #define MQTT_TOPIC_PERF  "robot/perf"
-#define BOARD_IP         "192.168.0.101"
+#define BOARD_IP         "192.168.31.63"
 #define RTSP_PORT        8554
 
 // 字符串化宏 (#x 把整数值变成字符串 "整数值")

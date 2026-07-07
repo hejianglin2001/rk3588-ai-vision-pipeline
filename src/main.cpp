@@ -11,6 +11,7 @@
 #include <opencv2/highgui.hpp>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include "core/preprocess.h"
 #include "core/postprocess.h"
 #include "core/pipeline.h"
@@ -167,7 +168,7 @@ int main(int argc, char *argv[])
             rknn_output outputs[2] = {};
             outputs[0].want_float = 1; outputs[1].want_float = 1;
             rknn_outputs_get(context, 2, outputs, NULL);
-            ir.boxes = postprocess_split((float*)outputs[0].buf, (float*)outputs[1].buf, 0.25f);
+            ir.boxes = postprocess_split((float*)outputs[0].buf, (float*)outputs[1].buf, 0.45f);
             rknn_outputs_release(context, 2, outputs);
             ir.img = move(pf.img); ir.id = pf.id;
             ir.capture_tp = pf.capture_tp;

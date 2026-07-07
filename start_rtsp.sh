@@ -18,7 +18,7 @@
 #   - ffmpeg 中转: 只做协议转换 (H264 TCP → RTSP), -c copy 不重编
 #   - tcpserversink: GStreamer → ffmpeg 用本地 TCP, 比 UDP 可靠
 # ═══════════════════════════════════════════════════════════════════
-#convert_cpp/weights/yolov5s.rknn yolo26n_split.rknn
+#convert_cpp/weights/yolov5s.rknn yolo26n_split.rknn convert_cpp/weights/yolo26n_fp16.rknn
 MODEL="${1:-./weights/yolo26n_split.rknn}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -80,12 +80,14 @@ echo "🔧 启动 MPP 硬编码管线..."
 gst-launch-1.0 filesrc location=/tmp/video_pipe ! \
     videoparse format=nv12 width=640 height=640 framerate=30/1 ! \
     mpph264enc ! h264parse ! \
+    queue max-size-buffers=1 max-size-time=0 max-size-bytes=0 ! \
     tcpserversink host=127.0.0.1 port=5601 &
 sleep 0.5
 
-# ── 6. 启动 ffmpeg (H264 TCP → RTSP 推流到 mediamtx) ──
-echo "📡 推流到 mediamtx..."
-nohup ffmpeg -re -f h264 -probesize 32 -i tcp://127.0.0.1:5601 \
+# ── 6. 启动 ffmpeg (H264 TCP → RTSP) ──
+echo "📡 推流到 mediamtx (低延迟)..."
+nohup ffmpeg -fflags nobuffer -flags low_delay \
+    -f h264 -probesize 32 -i tcp://127.0.0.1:5601 \
     -c copy -f rtsp rtsp://127.0.0.1:8554/live </dev/null &
 sleep 0.5
 
@@ -94,10 +96,11 @@ echo "🚀 启动推理..."
 if [ -d "$SCRIPT_DIR/build" ]; then
     cd "$SCRIPT_DIR/build"
 fi
+./yolo_inference "$MODEL"
 
 echo ""
 echo "✅ RTSP 推流已就绪"
-echo "   PC 端打开: rtsp://$(hostname -I | awk '{print $1}'):8554/live"
+echo "   ffplay:  ffplay -fflags nobuffer -flags low_delay rtsp://$(hostname -I | awk '{print $1}'):8554/live"
 echo ""
 
 ./yolo_inference "$MODEL"
