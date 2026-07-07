@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <fcntl.h>
 #include <unistd.h>
+#include <poll.h>
 #include <vector>
 #include "core/postprocess.h"
 #include "io/coco_names.h"
@@ -47,9 +48,15 @@ inline void draw_perf_overlay(cv::Mat& bgr, double fps, double e2e_ms,
                 cv::FONT_HERSHEY_SIMPLEX, 0.45, cv::Scalar(255, 255, 255), 1);
 }
 
-// ── BGR → NV12 → 写 FIFO 管道 (非阻塞) ──
+// ── BGR → NV12 → 写 FIFO (poll检查, 满则丢帧) ──
 inline bool write_nv12_pipe(const cv::Mat& bgr, FILE* pipe) {
     if (!pipe) return false;
+    int fd = fileno(pipe);
+    int total = bgr.cols * bgr.rows * 3 / 2;  // NV12 size
+    // 检查管道是否可写, 不可写则丢帧
+    struct pollfd pfd = {fd, POLLOUT, 0};
+    if (poll(&pfd, 1, 0) <= 0) return false;  // 管道满, 跳过
+
     cv::Mat i420;
     cv::cvtColor(bgr, i420, cv::COLOR_BGR2YUV_I420);
     int sz = bgr.cols * bgr.rows;
@@ -61,7 +68,7 @@ inline bool write_nv12_pipe(const cv::Mat& bgr, FILE* pipe) {
         dst_uv[i*2]   = i420.data[sz + i];
         dst_uv[i*2+1] = i420.data[sz + uv_sz + i];
     }
-    // 阻塞写: 管道满时等GStreamer消费, 保证帧完整
-    fwrite(nv12.data(), 1, sz + uv_sz*2, pipe);
+    // poll过了, 管道有空间, write 不会阻塞
+    write(fd, nv12.data(), total);
     return true;
 }
