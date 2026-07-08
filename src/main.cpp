@@ -57,7 +57,10 @@ int main(int argc, char *argv[])
     memset(output_attr, 0, sizeof(output_attr));
     rknn_query(context, RKNN_QUERY_INPUT_ATTR,  input_attr,  sizeof(input_attr));
     rknn_query(context, RKNN_QUERY_OUTPUT_ATTR, output_attr, sizeof(output_attr));
-    printf("input  type: %s\n", get_type_string(input_attr[0].type));
+    printf("input  type: %s  fmt=%d  w=%d h=%d c=%d  stride=%d  size=%d size_with_stride=%d\n",
+        get_type_string(input_attr[0].type), input_attr[0].fmt,
+        input_attr[0].dims[2], input_attr[0].dims[1], input_attr[0].dims[3],
+        input_attr[0].w_stride, input_attr[0].size, input_attr[0].size_with_stride);
     printf("out[0] type: %s  dims=[%d,%d,%d,%d]\n",
         get_type_string(output_attr[0].type),
         output_attr[0].dims[0], output_attr[0].dims[1],
@@ -68,9 +71,13 @@ int main(int argc, char *argv[])
         output_attr[1].dims[2], output_attr[1].dims[3]);
 
 #if USE_ZCOPY
-    rknn_tensor_mem *zcopy_in = rknn_create_mem(context, input_attr[0].size_with_stride);
-    if (zcopy_in && rknn_set_io_mem(context, zcopy_in, &input_attr[0]) == 0) {
-        printf("✅ RKNN 零拷贝输入已绑定 (%d bytes)\n", input_attr[0].size_with_stride);
+    // 照官方教程: 零拷贝下 set_io_mem 的属性必须设为 UINT8+NHWC
+    rknn_tensor_attr zcopy_attr = input_attr[0];
+    zcopy_attr.type = RKNN_TENSOR_UINT8;
+    zcopy_attr.fmt  = RKNN_TENSOR_NHWC;
+    rknn_tensor_mem *zcopy_in = rknn_create_mem(context, zcopy_attr.size_with_stride);
+    if (zcopy_in && rknn_set_io_mem(context, zcopy_in, &zcopy_attr) == 0) {
+        printf("✅ RKNN 零拷贝输入已绑定 (%d bytes)\n", zcopy_attr.size_with_stride);
     } else {
         printf("⚠️  零拷贝不可用, 回退\n");
         if (zcopy_in) { rknn_destroy_mem(context, zcopy_in); zcopy_in = nullptr; }
@@ -168,7 +175,7 @@ int main(int argc, char *argv[])
             rknn_output outputs[2] = {};
             outputs[0].want_float = 1; outputs[1].want_float = 1;
             rknn_outputs_get(context, 2, outputs, NULL);
-            ir.boxes = postprocess_split((float*)outputs[0].buf, (float*)outputs[1].buf, 0.45f);
+            ir.boxes = postprocess_split((float*)outputs[0].buf, (float*)outputs[1].buf, 0.25f);
             rknn_outputs_release(context, 2, outputs);
             ir.img = move(pf.img); ir.id = pf.id;
             ir.capture_tp = pf.capture_tp;
@@ -260,7 +267,21 @@ int main(int argc, char *argv[])
         double cap_ms = ns(cap_tp - t_cap).count() / 1e6;
 
         if (zcopy_in) {
-            memcpy(zcopy_in->virt_addr, img.data, MODEL_BYTES);
+            int n = input_attr[0].dims[2] * input_attr[0].dims[1] * input_attr[0].dims[3];
+            static int8_t qtab[256];
+            static bool qtab_ok = false;
+            if (!qtab_ok) {
+                float s = 1.0f / (255.0f * input_attr[0].scale);
+                int32_t zp = input_attr[0].zp;
+                for (int i = 0; i < 256; ++i) {
+                    int v = (int)roundf(i * s + zp);
+                    qtab[i] = (int8_t)(v < -128 ? -128 : (v > 127 ? 127 : v));
+                }
+                qtab_ok = true;
+            }
+            uint8_t* src = img.data;
+            int8_t* dst  = (int8_t*)zcopy_in->virt_addr;
+            for (int i = 0; i < n; ++i) dst[i] = qtab[src[i]];
             rknn_run(context, NULL);
         } else {
             rknn_input inputs[1] = {{0}};

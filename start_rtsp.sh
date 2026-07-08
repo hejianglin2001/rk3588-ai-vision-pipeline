@@ -18,7 +18,7 @@
 #   - ffmpeg 中转: 只做协议转换 (H264 TCP → RTSP), -c copy 不重编
 #   - tcpserversink: GStreamer → ffmpeg 用本地 TCP, 比 UDP 可靠
 # ═══════════════════════════════════════════════════════════════════
-#convert_cpp/weights/yolov5s.rknn yolo26n_split.rknn convert_cpp/weights/yolo26n_fp16.rknn
+#convert_cpp/weights/yolo26n_split_16.rknn yolo26n_split.rknn convert_cpp/weights/yolo26n_fp16.rknn
 MODEL="${1:-./weights/yolo26n_split.rknn}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 

@@ -37,8 +37,8 @@
 
 // ── 功能开关 (1=开, 0=关) ──
 #define USE_RGA          1     // RGA 硬件预处理 (UYVY→RGB+缩放)
-#define USE_MULTITHREAD  1     // 三线程管线
+#define USE_MULTITHREAD  0     // 三线程管线
 #define USE_RTSP         1    // RTSP 推流
-#define USE_ZCOPY        1     // RKNN 零拷贝输入
+#define USE_ZCOPY        0     // RKNN 零拷贝输入
 #define USE_VIDEO            0     // 1=循环读图片测FPS上限, 0=摄像头
 #define VIDEO_PATH           "./images/000000000785.jpg"
