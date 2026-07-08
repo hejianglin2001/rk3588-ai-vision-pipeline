@@ -22,29 +22,29 @@
 │  UYVY→RGB + 1080→640 (imresize, ~1ms)           │       │    rtsp://         │
 │    │                                            │       │                    │
 │    ▼                                            │       └────────────────────┘
-│  NPU 推理 (YOLO26n, INT8, 25ms)                        ▲         ▲
-│    │ 0 号输出: bbox [4×8400]                     │       │         │
-│    ├ 1 号输出: score [80×8400]                  │       │        MQTT
-│    ▼                                            │       │
-│  NMS 后处理 → 检测框                             │       │
-│    │                                            │       │
-│    ├── 安全状态机 (硬实时, 不依赖网络)              │       │
-│    ├── MQTT 上报 (JSON) ─────────────────────────┘       │
-│    └── 可视化 → NV12 → FIFO                       │       │
+│  NPU 推理 (YOLO26n, INT8, 25ms)                  |        ▲         ▲
+│    │ 0 号输出: bbox [4×8400]                     │        │         │
+│    ├ 1 号输出: score [80×8400]                   │        │        MQTT
+│    ▼                                             │        │
+│  NMS 后处理 → 检测框                              │        │
+│    │                                             │        │
+│    ├── 安全状态机 (硬实时, 不依赖网络)             │        │
+│    ├── MQTT 上报 (JSON) ─────────────────────────┘        │
+│    └── 可视化 → NV12 → FIFO                       │        │
 │                            │                      │       │
 │                            ▼                      │       │
-│                      GStreamer pipeline:           │       │
+│                      GStreamer pipeline:          │       │
 │                      videoparse → mpph264enc      │       │
-│                      → h264parse → tcpserversink   │       │
+│                      → h264parse → tcpserversink  │       │
 │                            │                      │       │
 │                            ▼                      │       │
-│                      ffmpeg: H264 TCP → RTSP       │       │
+│                      ffmpeg: H264 TCP → RTSP      │       │
 │                            │                      │       │
 │                            ▼                      │       │
-│                      mediamtx: RTSP Server (:8554) │       │
+│                     mediamtx: RTSP Server (:8554) │       │
 │                            │                      │       │
-│                      rtsp://板子IP:8554/live ──────┘       │
-└─────────────────────────────────────────────────────────────┘
+│                      rtsp://板子IP:8554/live ──────┘      │
+└───────────────────────────────────────────────────────────┘
 ```
 
 ## 硬件与性能
