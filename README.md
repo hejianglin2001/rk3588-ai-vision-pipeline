@@ -243,9 +243,7 @@ convert_cpp/
 ## 截图
 
 ![RTSP推流](docs/images/rtsp-vlc.png)
+
 ![性能终端](docs/images/terminal-perf.png)
-![硬件搭建](docs/images/board-setup.jpg)
 
-## License
 
-MIT
