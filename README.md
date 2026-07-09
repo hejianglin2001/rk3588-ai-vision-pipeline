@@ -47,27 +47,30 @@
 └───────────────────────────────────────────────────────────┘
 
 ```
-graph LR
-    subgraph RK3588
-        A[MIPI IMX415<br/>UYVY 1080p] -->|V4L2 Multiplanar<br/>8ms| B[V4L2 Capture]
-        B -->|DMA-BUF| C[RGA<br/>UYVY→RGB<br/>1080→640<br/>~1ms]
-        C -->|RGB Tensor| D[RKNN NPU<br/>YOLO26n INT8<br/>25ms]
-        D -->|bbox 4×8400<br/>score 80×8400| E[CPU 后处理<br/>NMS/解码<br/>~3ms]
-        E --> F{安全状态机<br/>硬实时}
-        E --> G[MQTT JSON上报]
-        E --> H[NV12可视化]
-        H -->|FIFO| I[GStreamer<br/>videoparse]
-        I --> J[mpph264enc<br/>~5ms]
-        J --> K[mediamtx<br/>RTSP :8554]
+<details>
+<summary>📱 移动端/自适应架构图 (点击展开 Mermaid)</summary>
+
+```mermaid
+graph TD
+    subgraph RK3588_End_Edge
+        A[MIPI IMX415<br/>UYVY 1080p] -->|V4L2 Multiplanar| B[V4L2 Capture]
+        B -->|DMA-BUF| C[RGA Hardware<br/>UYVY→RGB 1080→640]
+        C -->|RGB Tensor| D[RKNN NPU<br/>YOLO26n INT8]
+        D -->|Bbox & Score| E[CPU Post-process<br/>NMS]
+        E --> F{Safety State Machine}
+        E --> G[MQTT JSON]
+        E --> H[NV12 Overlay]
+        H -->|Named Pipe| I[GStreamer + MPP]
+        I --> J[mediamtx RTSP]
     end
     
-    subgraph 笔记本
-        L[MQTT Broker<br/>perception/perf]
-        M[VLC/ffplay<br/>RTSP客户端]
+    subgraph Host_PC
+        K[MQTT Broker]
+        L[VLC / ffplay]
     end
     
-    G -.->|WiFi/以太网| L
-    K -.->|rtsp://| M
+    G -.->|WiFi/Ethernet| K
+    J -.->|rtsp://| L
 ## 硬件与性能
 
 | 项目 | 说明 |
