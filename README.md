@@ -45,6 +45,8 @@
 │                            │                      │       │
 │                      rtsp://板子IP:8554/live ──────┘      │
 └───────────────────────────────────────────────────────────┘
+
+```
 graph LR
     subgraph RK3588
         A[MIPI IMX415<br/>UYVY 1080p] -->|V4L2 Multiplanar<br/>8ms| B[V4L2 Capture]
@@ -66,8 +68,6 @@ graph LR
     
     G -.->|WiFi/以太网| L
     K -.->|rtsp://| M
-```
-
 ## 硬件与性能
 
 | 项目 | 说明 |
