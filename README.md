@@ -45,30 +45,7 @@
 │                            │                      │       │
 │                      rtsp://板子IP:8554/live ──────┘      │
 └───────────────────────────────────────────────────────────┘
-<details>
-<summary>📱 移动端/自适应架构图 (点击展开 Mermaid)</summary>
 
-```mermaid
-graph TD
-    subgraph RK3588_End_Edge
-        A[MIPI IMX415<br/>UYVY 1080p] -->|V4L2 Multiplanar| B[V4L2 Capture]
-        B -->|DMA-BUF| C[RGA Hardware<br/>UYVY→RGB 1080→640]
-        C -->|RGB Tensor| D[RKNN NPU<br/>YOLO26n INT8]
-        D -->|Bbox & Score| E[CPU Post-process<br/>NMS]
-        E --> F{Safety State Machine}
-        E --> G[MQTT JSON]
-        E --> H[NV12 Overlay]
-        H -->|Named Pipe| I[GStreamer + MPP]
-        I --> J[mediamtx RTSP]
-    end
-    
-    subgraph Host_PC
-        K[MQTT Broker]
-        L[VLC / ffplay]
-    end
-    
-    G -.->|WiFi/Ethernet| K
-    J -.->|rtsp://| L
 ```
 
 ## 硬件与性能
